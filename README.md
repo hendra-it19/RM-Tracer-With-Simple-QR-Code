@@ -75,5 +75,28 @@ Ikuti langkah-langkah berikut untuk menjalankan project di komputer lokal Anda:
 - `/src/contexts`: React Context untuk state management (Auth, Toast).
 - `/src/utils`: Fungsi helper dan utilitas.
 
+## 🚀 Panduan Deployment (cPanel)
+
+Jika Anda ingin mengupload aplikasi ini ke cPanel, ikuti langkah berikut:
+
+1. **Build Project**
+   Jalankan perintah berikut di terminal:
+   ```bash
+   npm run build
+   ```
+   Ini akan menghasilkan folder `dist` yang berisi file siap produksi.
+
+2. **Persiapan File**
+   - Pastikan di dalam folder `dist` sudah ada file `.htaccess`. File ini otomatis tercopy dari folder `public` jika sudah dibuat.
+   - File `.htaccess` penting agar saat halaman direfresh tidak 404 (Not Found).
+
+3. **Upload ke cPanel**
+   - Buka File Manager di cPanel.
+   - Masuk ke folder `public_html` atau subdomain tujuan.
+   - **Upload semua isi folder `dist`** (bukan folder dist-nya, tapi isinya: `assets`, `index.html`, `.htaccess`, dll).
+
+4. **Konfigurasi**
+   - Pastikan file `.env` tidak ikut diupload jika berisi data sensitif, ATAU sesuaikan environment variable di hosting jika diperlukan (biasanya aplikasi React/Vite membaca env saat build, jadi pastikan `.env` sudah benar SAAT proses build di lokal).
+
 ---
 Dikembangkan untuk mempermudah manajemen rekam medis rumah sakit.
