@@ -16,7 +16,8 @@ import {
     ShieldCheck,
     Key,
     UserX,
-    UserCheck
+    UserCheck,
+    Lock
 } from 'lucide-react'
 
 const Users = () => {
@@ -26,7 +27,10 @@ const Users = () => {
     const [currentPage, setCurrentPage] = useState(1)
     const [totalCount, setTotalCount] = useState(0)
     const [showModal, setShowModal] = useState(false)
+    const [showResetModal, setShowResetModal] = useState(false)
     const [editingUser, setEditingUser] = useState(null)
+    const [resetUser, setResetUser] = useState(null)
+    const [resetPassword, setResetPassword] = useState('')
     const [formData, setFormData] = useState({
         email: '',
         password: '',
@@ -308,6 +312,18 @@ const Users = () => {
                                                     </button>
                                                     <button
                                                         className="btn btn-icon btn-ghost btn-sm"
+                                                        title="Reset Password"
+                                                        onClick={() => {
+                                                            setResetUser(user)
+                                                            setResetPassword('')
+                                                            setShowResetModal(true)
+                                                        }}
+                                                        style={{ color: 'var(--warning)' }}
+                                                    >
+                                                        <Key size={16} />
+                                                    </button>
+                                                    <button
+                                                        className="btn btn-icon btn-ghost btn-sm"
                                                         title="Hapus"
                                                         onClick={() => handleDelete(user)}
                                                         style={{ color: 'var(--error)' }}
@@ -439,6 +455,83 @@ const Users = () => {
                                     disabled={saving}
                                 >
                                     {saving ? 'Menyimpan...' : 'Simpan'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Reset Password Modal */}
+            {showResetModal && (
+                <div className="modal-overlay" onClick={() => setShowResetModal(false)}>
+                    <div className="modal" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h3 className="modal-title flex items-center gap-sm">
+                                <Lock size={20} />
+                                Reset Password User
+                            </h3>
+                            <button className="modal-close" onClick={() => setShowResetModal(false)}>
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <form onSubmit={async (e) => {
+                            e.preventDefault()
+                            if (resetPassword.length < 6) {
+                                showError('Password minimal 6 karakter')
+                                return
+                            }
+
+                            setSaving(true)
+                            try {
+                                const { error } = await supabase.rpc('reset_user_password', {
+                                    target_user_id: resetUser.id,
+                                    new_password: resetPassword
+                                })
+
+                                if (error) throw error
+
+                                success(`Password untuk ${resetUser.nama} berhasil direset`)
+                                setShowResetModal(false)
+                            } catch (err) {
+                                showError(err.message || 'Gagal mereset password')
+                                console.error(err)
+                            }
+                            setSaving(false)
+                        }}>
+                            <div className="modal-body">
+                                <div className="alert alert-warning mb-md">
+                                    <p className="text-sm">
+                                        Anda akan mengubah password untuk user <strong>{resetUser?.nama}</strong> ({resetUser?.email}).
+                                    </p>
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">Password Baru</label>
+                                    <input
+                                        type="password"
+                                        className="form-input"
+                                        value={resetPassword}
+                                        onChange={(e) => setResetPassword(e.target.value)}
+                                        placeholder="Minimal 6 karakter"
+                                        minLength={6}
+                                        required
+                                    />
+                                </div>
+                            </div>
+                            <div className="modal-footer">
+                                <button
+                                    type="button"
+                                    className="btn btn-secondary"
+                                    onClick={() => setShowResetModal(false)}
+                                >
+                                    Batal
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="btn btn-primary"
+                                    disabled={saving}
+                                >
+                                    {saving ? 'Mereset...' : 'Reset Password'}
                                 </button>
                             </div>
                         </form>

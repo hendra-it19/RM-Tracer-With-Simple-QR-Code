@@ -13,6 +13,7 @@ import PatientDetail from './pages/admin/PatientDetail'
 import Users from './pages/admin/Users'
 import ActivityLog from './pages/admin/ActivityLog'
 import PrintQR from './pages/admin/PrintQR'
+import AdminProfile from './pages/admin/Profile'
 
 // Petugas Pages
 import PetugasLayout from './components/layout/PetugasLayout'
@@ -20,10 +21,10 @@ import PetugasHome from './pages/petugas/Home'
 import Scan from './pages/petugas/Scan'
 import Search from './pages/petugas/Search'
 import History from './pages/petugas/History'
-import Profile from './pages/petugas/Profile'
+import PetugasProfile from './pages/petugas/Profile'
 
 // Loading component
-const LoadingScreen = () => (
+export const LoadingScreen = () => (
     <div className="loading-overlay">
         <div className="spinner spinner-lg"></div>
         <p className="loading-text">Memuat...</p>
@@ -129,6 +130,7 @@ function AppRoutes() {
                 <Route path="patients/:id" element={<PatientDetail />} />
                 <Route path="users" element={<Users />} />
                 <Route path="logs" element={<ActivityLog />} />
+                <Route path="profile" element={<AdminProfile />} />
             </Route>
 
             {/* Petugas Routes */}
@@ -144,7 +146,7 @@ function AppRoutes() {
                 <Route path="scan" element={<Scan />} />
                 <Route path="search" element={<Search />} />
                 <Route path="history" element={<History />} />
-                <Route path="profile" element={<Profile />} />
+                <Route path="profile" element={<PetugasProfile />} />
             </Route>
 
             {/* Default redirect */}

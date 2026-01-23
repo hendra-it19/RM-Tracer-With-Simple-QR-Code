@@ -12,21 +12,30 @@ import {
 } from 'lucide-react'
 import { useState } from 'react'
 
+import { LoadingScreen } from '../../App'
+
 const AdminLayout = () => {
     const { profile, signOut } = useAuth()
     const navigate = useNavigate()
     const [sidebarOpen, setSidebarOpen] = useState(false)
+    const [isLoggingOut, setIsLoggingOut] = useState(false)
 
     const handleSignOut = async () => {
-        await signOut()
-        navigate('/login')
+        if (confirm('Apakah Anda yakin ingin keluar aplikasi?')) {
+            setIsLoggingOut(true)
+            // Artificial delay for better UX
+            await new Promise(resolve => setTimeout(resolve, 800))
+            await signOut()
+            navigate('/login')
+        }
     }
 
     const navItems = [
         { path: '/admin', icon: LayoutDashboard, label: 'Dashboard', end: true },
         { path: '/admin/patients', icon: FileText, label: 'Pasien & Berkas' },
         { path: '/admin/users', icon: Users, label: 'Manajemen User' },
-        { path: '/admin/logs', icon: Activity, label: 'Log Aktivitas' }
+        { path: '/admin/logs', icon: Activity, label: 'Log Aktivitas' },
+        { path: '/admin/profile', icon: Users, label: 'Profil Saya' }
     ]
 
     const getInitials = (name) => {
@@ -36,6 +45,7 @@ const AdminLayout = () => {
 
     return (
         <div className="app-layout">
+            {isLoggingOut && <LoadingScreen />}
             {/* Mobile menu button */}
             <button
                 className="btn btn-icon btn-ghost no-print"

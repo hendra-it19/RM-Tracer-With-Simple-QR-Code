@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import { useToast } from '../../contexts/ToastContext'
 import { User, Mail, Shield, LogOut, Key, Save } from 'lucide-react'
+import { LoadingScreen } from '../../App'
 
 const Profile = () => {
     const navigate = useNavigate()
@@ -12,6 +13,7 @@ const Profile = () => {
     const [editing, setEditing] = useState(false)
     const [changingPassword, setChangingPassword] = useState(false)
     const [saving, setSaving] = useState(false)
+    const [isLoggingOut, setIsLoggingOut] = useState(false)
 
     const [formData, setFormData] = useState({
         nama: profile?.nama || ''
@@ -73,8 +75,13 @@ const Profile = () => {
     }
 
     const handleSignOut = async () => {
-        await signOut()
-        navigate('/login')
+        if (confirm('Apakah Anda yakin ingin keluar aplikasi?')) {
+            setIsLoggingOut(true)
+            // Artificial delay for better UX
+            await new Promise(resolve => setTimeout(resolve, 800))
+            await signOut()
+            navigate('/login')
+        }
     }
 
     const getInitials = (name) => {
@@ -84,6 +91,7 @@ const Profile = () => {
 
     return (
         <div className="flex flex-col gap-lg">
+            {isLoggingOut && <LoadingScreen />}
             {/* Profile Header */}
             <div className="card">
                 <div className="card-body text-center">
