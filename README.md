@@ -28,7 +28,22 @@ Aplikasi ini memiliki dua peran pengguna utama: **Admin** dan **Petugas**.
 - **QR Code**: `qrcode.react`
 - **Icons**: `lucide-react`
 
-## 📦 Cara Memulai (Installation)
+## � Progressive Web App (PWA)
+
+Aplikasi ini telah mendukung teknologi PWA, yang memungkinkannya berfungsi layaknya aplikasi native.
+
+### Fitur PWA
+- **Installable**: Dapat diinstal ke Home Screen (Android/iOS/Desktop).
+- **Offline Capable**: Dapat diakses (cache-first) meskipun koneksi internet terputus (untuk halaman yang pernah dibuka).
+- **Custom Install Prompt**: Notifikasi instalasi khusus yang muncul di bagian bawah layar jika aplikasi belum terinstal (untuk browser yang mendukung `beforeinstallprompt`).
+- **App-like Experience**: Berjalan dalam mode `standalone` tanpa bar browser yang mengganggu.
+
+### Konfigurasi Teknis
+- **Plugin**: Menggunakan `vite-plugin-pwa` untuk manajemen Service Worker dan Manifest.
+- **Update Strategy**: `autoUpdate` - Aplikasi akan otomatis memperbarui Service Worker saat ada versi baru.
+- **Manifest**: Dikonfigurasi dengan nama, ikon, dan warna tema yang sesuai dengan branding Rumah Sakit.
+
+## �📦 Cara Memulai (Installation)
 
 Ikuti langkah-langkah berikut untuk menjalankan project di komputer lokal Anda:
 

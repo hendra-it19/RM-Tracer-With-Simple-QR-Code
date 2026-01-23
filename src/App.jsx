@@ -15,6 +15,9 @@ import ActivityLog from './pages/admin/ActivityLog'
 import PrintQR from './pages/admin/PrintQR'
 import AdminProfile from './pages/admin/Profile'
 
+// PWA Install Prompt
+import InstallPWA from './components/InstallPWA'
+
 // Petugas Pages
 import PetugasLayout from './components/layout/PetugasLayout'
 import PetugasHome from './pages/petugas/Home'
@@ -161,6 +164,7 @@ function App() {
         <BrowserRouter>
             <AuthProvider>
                 <ToastProvider>
+                    <InstallPWA />
                     <AppRoutes />
                 </ToastProvider>
             </AuthProvider>
