@@ -182,7 +182,7 @@ const Login = () => {
                 </form>
 
                 <div className="login-footer">
-                    <p>Rekam Medis Tracer System &copy; 2024</p>
+                    <p>Rekam Medis Tracer System &copy; 2026</p>
                 </div>
             </div>
         </div>
