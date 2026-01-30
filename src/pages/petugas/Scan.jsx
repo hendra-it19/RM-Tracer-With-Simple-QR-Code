@@ -24,6 +24,7 @@ import {
     AlertCircle,
     Search as SearchIcon
 } from 'lucide-react'
+import jsQR from 'jsqr'
 
 const Scan = () => {
     const location = useLocation()
@@ -89,28 +90,48 @@ const Scan = () => {
     }
 
     const startQRDetection = () => {
-        // Use native BarcodeDetector if available
-        if ('BarcodeDetector' in window) {
-            const barcodeDetector = new BarcodeDetector({ formats: ['qr_code'] })
-
-            scanIntervalRef.current = setInterval(async () => {
-                if (videoRef.current && videoRef.current.readyState === 4) {
+        const scan = async () => {
+            if (videoRef.current && videoRef.current.readyState === 4) {
+                // Try Native BarcodeDetector First
+                if ('BarcodeDetector' in window) {
                     try {
+                        const barcodeDetector = new BarcodeDetector({ formats: ['qr_code'] })
                         const barcodes = await barcodeDetector.detect(videoRef.current)
                         if (barcodes.length > 0) {
                             const qrValue = barcodes[0].rawValue
                             stopScanning()
                             handleScanResult(qrValue)
+                            return
                         }
                     } catch (err) {
-                        // Ignore detection errors
+                        // Drop through to jsQR if native fails
                     }
                 }
-            }, 200)
-        } else {
-            // Fallback: show manual input option
-            warning('QR Scanner tidak didukung browser ini. Gunakan pencarian manual.')
+
+                // Fallback to jsQR
+                try {
+                    const video = videoRef.current
+                    const canvas = document.createElement('canvas')
+                    canvas.width = video.videoWidth
+                    canvas.height = video.videoHeight
+                    const ctx = canvas.getContext('2d')
+                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+                    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+                    const code = jsQR(imageData.data, imageData.width, imageData.height, {
+                        inversionAttempts: "dontInvert",
+                    })
+
+                    if (code) {
+                        stopScanning()
+                        handleScanResult(code.data)
+                    }
+                } catch (e) {
+                    console.error('jsQR error:', e)
+                }
+            }
         }
+
+        scanIntervalRef.current = setInterval(scan, 200)
     }
 
     const stopScanning = () => {
