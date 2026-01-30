@@ -1,32 +1,28 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { AuthProvider, useAuth } from './contexts/AuthContext'
-import { ToastProvider } from './contexts/ToastContext'
-import { SyncProvider } from './contexts/SyncContext'
-import OfflineStatus from './components/OfflineStatus'
+import { Suspense, lazy } from 'react'
 
 // Pages
-import Login from './pages/Login'
+const Login = lazy(() => import('./pages/Login'))
 
 // Admin Pages
-import AdminLayout from './components/layout/AdminLayout'
-import Dashboard from './pages/admin/Dashboard'
-import Patients from './pages/admin/Patients'
-import PatientDetail from './pages/admin/PatientDetail'
-import Users from './pages/admin/Users'
-import ActivityLog from './pages/admin/ActivityLog'
-import PrintQR from './pages/admin/PrintQR'
-import AdminProfile from './pages/admin/Profile'
+const AdminLayout = lazy(() => import('./components/layout/AdminLayout'))
+const Dashboard = lazy(() => import('./pages/admin/Dashboard'))
+const Patients = lazy(() => import('./pages/admin/Patients'))
+const PatientDetail = lazy(() => import('./pages/admin/PatientDetail'))
+const Users = lazy(() => import('./pages/admin/Users'))
+const ActivityLog = lazy(() => import('./pages/admin/ActivityLog'))
+const PrintQR = lazy(() => import('./pages/admin/PrintQR'))
+const AdminProfile = lazy(() => import('./pages/admin/Profile'))
 
 // PWA Install Prompt
 import InstallPWA from './components/InstallPWA'
 
 // Petugas Pages
-import PetugasLayout from './components/layout/PetugasLayout'
-import PetugasHome from './pages/petugas/Home'
-import Scan from './pages/petugas/Scan'
-import Search from './pages/petugas/Search'
-import History from './pages/petugas/History'
-import PetugasProfile from './pages/petugas/Profile'
+const PetugasLayout = lazy(() => import('./components/layout/PetugasLayout'))
+const PetugasHome = lazy(() => import('./pages/petugas/Home'))
+const Scan = lazy(() => import('./pages/petugas/Scan'))
+const Search = lazy(() => import('./pages/petugas/Search'))
+const History = lazy(() => import('./pages/petugas/History'))
+const PetugasProfile = lazy(() => import('./pages/petugas/Profile'))
 
 // Loading component
 export const LoadingScreen = () => (
@@ -109,55 +105,57 @@ const PublicRoute = ({ children }) => {
 
 function AppRoutes() {
     return (
-        <Routes>
-            {/* Public Routes */}
-            <Route
-                path="/login"
-                element={
-                    <PublicRoute>
-                        <Login />
-                    </PublicRoute>
-                }
-            />
+        <Suspense fallback={<LoadingScreen />}>
+            <Routes>
+                {/* Public Routes */}
+                <Route
+                    path="/login"
+                    element={
+                        <PublicRoute>
+                            <Login />
+                        </PublicRoute>
+                    }
+                />
 
-            {/* Admin Routes */}
-            <Route
-                path="/admin"
-                element={
-                    <ProtectedRoute allowedRoles={['admin']}>
-                        <AdminLayout />
-                    </ProtectedRoute>
-                }
-            >
-                <Route index element={<Dashboard />} />
-                <Route path="patients" element={<Patients />} />
-                <Route path="patients/print" element={<PrintQR />} />
-                <Route path="patients/:id" element={<PatientDetail />} />
-                <Route path="users" element={<Users />} />
-                <Route path="logs" element={<ActivityLog />} />
-                <Route path="profile" element={<AdminProfile />} />
-            </Route>
+                {/* Admin Routes */}
+                <Route
+                    path="/admin"
+                    element={
+                        <ProtectedRoute allowedRoles={['admin']}>
+                            <AdminLayout />
+                        </ProtectedRoute>
+                    }
+                >
+                    <Route index element={<Dashboard />} />
+                    <Route path="patients" element={<Patients />} />
+                    <Route path="patients/print" element={<PrintQR />} />
+                    <Route path="patients/:id" element={<PatientDetail />} />
+                    <Route path="users" element={<Users />} />
+                    <Route path="logs" element={<ActivityLog />} />
+                    <Route path="profile" element={<AdminProfile />} />
+                </Route>
 
-            {/* Petugas Routes */}
-            <Route
-                path="/petugas"
-                element={
-                    <ProtectedRoute allowedRoles={['petugas', 'admin']}>
-                        <PetugasLayout />
-                    </ProtectedRoute>
-                }
-            >
-                <Route index element={<PetugasHome />} />
-                <Route path="scan" element={<Scan />} />
-                <Route path="search" element={<Search />} />
-                <Route path="history" element={<History />} />
-                <Route path="profile" element={<PetugasProfile />} />
-            </Route>
+                {/* Petugas Routes */}
+                <Route
+                    path="/petugas"
+                    element={
+                        <ProtectedRoute allowedRoles={['petugas', 'admin']}>
+                            <PetugasLayout />
+                        </ProtectedRoute>
+                    }
+                >
+                    <Route index element={<PetugasHome />} />
+                    <Route path="scan" element={<Scan />} />
+                    <Route path="search" element={<Search />} />
+                    <Route path="history" element={<History />} />
+                    <Route path="profile" element={<PetugasProfile />} />
+                </Route>
 
-            {/* Default redirect */}
-            <Route path="/" element={<Navigate to="/login" replace />} />
-            <Route path="*" element={<Navigate to="/login" replace />} />
-        </Routes>
+                {/* Default redirect */}
+                <Route path="/" element={<Navigate to="/login" replace />} />
+                <Route path="*" element={<Navigate to="/login" replace />} />
+            </Routes>
+        </Suspense>
     )
 }
 

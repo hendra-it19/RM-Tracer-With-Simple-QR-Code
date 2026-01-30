@@ -1,0 +1,1 @@
+import{r as e}from"./index-CSak_wTG.js";import"./createLucideIcon-6Q1StMY_.js";const r=e.createContext({}),u=()=>{const t=e.useContext(r);if(!t)throw new Error("useAuth must be used within AuthProvider");return t};export{u};
