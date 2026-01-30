@@ -24,7 +24,6 @@ import {
     AlertCircle,
     Search as SearchIcon
 } from 'lucide-react'
-import jsQR from 'jsqr'
 
 const Scan = () => {
     const location = useLocation()
@@ -117,6 +116,11 @@ const Scan = () => {
                     const ctx = canvas.getContext('2d')
                     ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
                     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+
+                    // Dynamic import jsQR to avoid build initialization errors
+                    const jsQRModule = await import('jsqr')
+                    const jsQR = jsQRModule.default || jsQRModule
+
                     const code = jsQR(imageData.data, imageData.width, imageData.height, {
                         inversionAttempts: "dontInvert",
                     })
