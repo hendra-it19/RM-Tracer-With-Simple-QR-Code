@@ -184,11 +184,32 @@ const Users = () => {
     }
 
     const handleDelete = async (user) => {
-        if (!confirm(`Hapus user ${user.nama} (${user.email})?`)) {
+        if (!confirm(`Hapus user ${user.nama} (${user.email})?\n\nTindakan ini tidak dapat dibatalkan. Riwayat aktivitas user ini akan tetap ada namun tanpa nama.`)) {
             return
         }
 
-        showError('Penghapusan user harus dilakukan melalui Supabase Dashboard')
+        setLoading(true)
+        try {
+            // Call RPC to delete user
+            const { error } = await supabase.rpc('delete_user_by_admin', {
+                target_user_id: user.id
+            })
+
+            if (error) throw error
+
+            // Log activity
+            await supabase.rpc('log_activity', {
+                p_aksi: 'DELETE_USER',
+                p_details: { email: user.email, nama: user.nama }
+            })
+
+            success(`User ${user.nama} berhasil dihapus`)
+            fetchUsers()
+        } catch (err) {
+            showError(err.message || 'Gagal menghapus user')
+            console.error(err)
+            setLoading(false)
+        }
     }
 
     const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE)

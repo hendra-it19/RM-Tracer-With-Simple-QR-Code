@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useLocation } from 'react-router-dom'
 import { supabase } from '../../config/supabase'
 import { useAuth } from '../../contexts/AuthContext'
+import { useSync } from '../../contexts/SyncContext'
 import { useToast } from '../../contexts/ToastContext'
 import { STATUS_LOKASI, UNDO_TIMEOUT } from '../../utils/constants'
 import {
@@ -126,12 +127,28 @@ const Scan = () => {
         setScanning(false)
     }
 
+    const { isOnline, addToQueue } = useSync() // Add useSync hook
+
     const handleScanResult = async (qrValue) => {
         const noRm = parseQRValue(qrValue)
 
         if (!noRm) {
             showError('QR Code tidak valid')
             startScanning()
+            return
+        }
+
+        // Offline Handling
+        if (!isOnline) {
+            setPatient({
+                id: 'offline-' + noRm, // Temporary ID
+                no_rm: noRm,
+                nama: `Pasien ${noRm}`,
+                tanggal_lahir: new Date(), // Dummy date
+                offline: true
+            })
+            setCurrentStatus(null)
+            warning('Mode Offline: Data pasien tidak dapat diverifikasi penuh')
             return
         }
 
@@ -161,9 +178,6 @@ const Scan = () => {
             setPatient(patientData)
             setCurrentStatus(tracerData?.status_lokasi || null)
 
-            setPatient(patientData)
-            setCurrentStatus(tracerData?.status_lokasi || null)
-
             // Log removed as per user request (only log mutations)
 
         } catch (err) {
@@ -178,6 +192,47 @@ const Scan = () => {
 
         setSelectedStatus(status)
         setSaving(true)
+
+        // Offline Handling
+        if (!isOnline || patient.offline) {
+            try {
+                // Add to offline queue
+                addToQueue({
+                    type: 'SCAN_MUTATION',
+                    payload: {
+                        patient_id: patient.offline ? null : patient.id, // If offline patient, id is null/temp
+                        no_rm: patient.no_rm,
+                        status_lokasi: status,
+                        keterangan: keterangan || null,
+                        petugas_id: profile.id
+                    }
+                })
+
+                setLastUpdate({
+                    id: 'offline-temp',
+                    patient: patient,
+                    oldStatus: currentStatus,
+                    newStatus: status,
+                    keterangan: keterangan
+                })
+
+                setCurrentStatus(status)
+                success(`Disimpan ke antrian offline: ${getStatusLabel(status, STATUS_LOKASI)}`)
+
+                // Reset for next scan
+                setTimeout(() => {
+                    setSelectedStatus(null)
+                    setKeterangan('')
+                    resetScan() // Go back to scan to prevent stuck state
+                }, 1500)
+
+            } catch (err) {
+                console.error('Error queuing offline item:', err)
+                showError('Gagal menyimpan ke antrian offline')
+            }
+            setSaving(false)
+            return
+        }
 
         try {
             // Insert new tracer record

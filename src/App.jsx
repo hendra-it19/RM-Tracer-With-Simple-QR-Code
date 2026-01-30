@@ -1,6 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { ToastProvider } from './contexts/ToastContext'
+import { SyncProvider } from './contexts/SyncContext'
+import OfflineStatus from './components/OfflineStatus'
 
 // Pages
 import Login from './pages/Login'
@@ -159,17 +161,25 @@ function AppRoutes() {
     )
 }
 
+
+
+// ...
+
 function App() {
     return (
         <BrowserRouter>
             <AuthProvider>
                 <ToastProvider>
-                    <InstallPWA />
-                    <AppRoutes />
+                    <SyncProvider>
+                        <InstallPWA />
+                        <OfflineStatus />
+                        <AppRoutes />
+                    </SyncProvider>
                 </ToastProvider>
             </AuthProvider>
         </BrowserRouter>
     )
 }
+
 
 export default App

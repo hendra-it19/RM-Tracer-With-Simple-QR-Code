@@ -63,7 +63,7 @@ const Login = () => {
                         <div className="login-logo-icon">
                             <QrCode size={28} />
                         </div>
-                        <span>RM Tracer</span>
+                        <span>Berkas RM</span>
                     </div>
                     <p className="login-tagline">Sistem Pelacakan Rekam Medis</p>
                 </div>

@@ -1,117 +1,102 @@
 # RM Tracer - Aplikasi Pelacakan Rekam Medis Web
 
-Aplikasi manajemen rekam medis rumah sakit berbasis web yang memanfaatkan teknologi QR Code untuk mempercepat proses pelacakan dan pengelolaan dokumen rekam medis pasien.
+Aplikasi manajemen rekam medis rumah sakit berbasis web yang memanfaatkan teknologi QR Code untuk mempercepat proses pelacakan dan pengelolaan dokumen rekam medis pasien. Aplikasi ini dirancang dengan pendekatan **Offline-First**, memastikan operasional tetap berjalan lancar meski tanpa koneksi internet.
 
 ## 🚀 Fitur Utama
 
-Aplikasi ini memiliki dua peran pengguna utama: **Admin** dan **Petugas**.
+### 1. 📡 Offline-First System (PWA)
 
-### 🛡️ Admin
-- **Dashboard**: Ringkasan statistik pengguna dan pasien.
-- **Manajemen Pasien**: Tambah, edit, dan hapus data pasien.
-- **Cetak QR Code**: Generate dan cetak kartu QR Code untuk pasien.
-- **Manajemen Pengguna**: Kelola akun petugas dan admin.
-- **Log Aktivitas**: Pantau riwayat aktivitas sistem.
+Aplikasi ini dapat digunakan tanpa koneksi internet (offline).
 
-### 👨‍⚕️ Petugas
-- **Scan QR Code**: Pindai kartu pasien untuk akses cepat ke data rekam medis.
-- **Pencarian Pasien**: Cari data pasien manual jika QR Code tidak tersedia.
-- **Riwayat**: Lihat riwayat akses dan pemindahan berkas.
-- **Profil**: Kelola informasi akun petugas.
+- **Scan Offline**: Petugas dapat memindai QR code saat offline. Data akan disimpan dalam antrian lokal.
+- **Auto-Sync**: Saat koneksi internet kembali, aplikasi otomatis menyinkronkan data pending ke server.
+- **Indikator Status**: Notifikasi visual status koneksi dan jumlah antrian data.
+- **Installable**: Dapat diinstal sebagai aplikasi desktop/mobile (PWA).
 
-## 🛠️ Teknologi yang Digunakan
+### 2. �️ Admin Dashboard
 
-- **Frontend**: [React](https://react.dev/) + [Vite](https://vitejs.dev/)
-- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
-- **Backend & Auth**: [Supabase](https://supabase.com/)
-- **Routing**: [React Router](https://reactrouter.com/)
-- **QR Code**: `qrcode.react`
-- **Icons**: `lucide-react`
+- **Monitoring Real-time**: Pantau lokasi berkas terkini.
+- **Manajemen User**: Tambah, edit, dan **hapus** akun petugas/admin (Fitur hapus akun aman dengan audit trail).
+- **Manajemen Pasien**: CRUD data pasien dan cetak kartu QR.
+- **Log Aktivitas**: Riwayat lengkap setiap perubahan data dan scan.
 
-## � Progressive Web App (PWA)
+### 3. 👨‍⚕️ Petugas Lapangan
 
-Aplikasi ini telah mendukung teknologi PWA, yang memungkinkannya berfungsi layaknya aplikasi native.
+- **QR Scanner Terintegrasi**: Scan cepat menggunakan kamera perangkat.
+- **Update Lokasi**: Memperbarui status lokasi berkas (Gudang, Poliklinik, Rawat Inap, dll).
+- **Riwayat Scan**: Melihat histori pemindahan berkas.
 
-### Fitur PWA
-- **Installable**: Dapat diinstal ke Home Screen (Android/iOS/Desktop).
-- **Offline Capable**: Dapat diakses (cache-first) meskipun koneksi internet terputus (untuk halaman yang pernah dibuka).
-- **Custom Install Prompt**: Notifikasi instalasi khusus yang muncul di bagian bawah layar jika aplikasi belum terinstal (untuk browser yang mendukung `beforeinstallprompt`).
-- **App-like Experience**: Berjalan dalam mode `standalone` tanpa bar browser yang mengganggu.
+## 🛠️ Tech Stack
 
-### Konfigurasi Teknis
-- **Plugin**: Menggunakan `vite-plugin-pwa` untuk manajemen Service Worker dan Manifest.
-- **Update Strategy**: `autoUpdate` - Aplikasi akan otomatis memperbarui Service Worker saat ada versi baru.
-- **Manifest**: Dikonfigurasi dengan nama, ikon, dan warna tema yang sesuai dengan branding Rumah Sakit.
+- **Frontend**: React + Vite
+- **Language**: JavaScript
+- **Styling**: CSS (Responsive & Modern UI)
+- **Database & Auth**: Supabase (PostgreSQL)
+- **PWA**: Vite PWA Plugin + Custom Sync Context
+- **Libraries**:
+  - `react-router-dom` (Routing)
+  - `lucide-react` (Icons)
+  - `chart.js` (Visualisasi Data)
+  - `qrcode.react` (Generator QR)
 
-## �📦 Cara Memulai (Installation)
-
-Ikuti langkah-langkah berikut untuk menjalankan project di komputer lokal Anda:
+## 📦 Instalasi & Cara Pakai
 
 ### Prasyarat
-- Node.js (versi 18 atau terbaru disarankan)
-- NPM atau Yarn
 
-### Langkah Instalasi
+- Node.js (v18+)
+- Akun Supabase (untuk database)
 
-1. **Clone repositori ini** (jika menggunakan git) atau ekstrak file project.
-   ```bash
-   git clone <repository-url>
-   cd rm-tracer
-   ```
+### Langkah Setup
 
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
+1.  **Clone Repository**
 
-3. **Konfigurasi Environment Variable**
-   Buat file `.env` di root folder project dan tambahkan konfigurasi Supabase Anda:
-   ```env
-   VITE_SUPABASE_URL=your_supabase_project_url
-   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-   ```
+    ```bash
+    git clone <repository-url>
+    cd rm-tracer
+    ```
 
-4. **Jalankan Aplikasi**
-   ```bash
-   npm run dev
-   ```
-   Aplikasi akan berjalan di `http://localhost:5173`.
+2.  **Install Dependencies**
 
-## 📜 Skrip Tersedia
+    ```bash
+    npm install
+    ```
 
-- `npm run dev`: Menjalankan server development.
-- `npm run build`: Melakukan build aplikasi untuk produksi.
-- `npm run preview`: Melihat preview hasil build lokal.
+3.  **Konfigurasi Environment**
+    Buat file `.env` dan isi dengan kredensial Supabase Anda:
 
-## 🔒 Struktur Project
+    ```env
+    VITE_SUPABASE_URL=https://your-project.supabase.co
+    VITE_SUPABASE_ANON_KEY=your-anon-key
+    ```
 
-- `/src/components`: Komponen UI yang dapat digunakan kembali.
-- `/src/pages`: Halaman-halaman utama aplikasi.
-- `/src/contexts`: React Context untuk state management (Auth, Toast).
-- `/src/utils`: Fungsi helper dan utilitas.
+4.  **Setup Database (Supabase)**
+    Buka SQL Editor di Dashboard Supabase dan jalankan file berikut secara berurutan:
+    - `supabase/schema.sql` (Struktur dasar tabel)
+    - `supabase/fix_account_deletion.sql` (Patch untuk fitur hapus akun & constraint)
 
-## 🚀 Panduan Deployment (cPanel)
+5.  **Jalankan Aplikasi**
+    ```bash
+    npm run dev
+    ```
+    Akses di `http://localhost:5173`.
 
-Jika Anda ingin mengupload aplikasi ini ke cPanel, ikuti langkah berikut:
+## 🔄 Alur Kerja Sistem
 
-1. **Build Project**
-   Jalankan perintah berikut di terminal:
-   ```bash
-   npm run build
-   ```
-   Ini akan menghasilkan folder `dist` yang berisi file siap produksi.
+1.  **Login**: User masuk menggunakan email & password.
+2.  **Pindai Berkas (Petugas)**:
+    - Buka menu Scan.
+    - Arahkan kamera ke QR Code berkas.
+    - Pilih lokasi tujuan baru (misal: "Dikirim ke Poli").
+    - _Jika Offline_: Data disimpan lokal dan akan di-upload saat online.
+3.  **Monitoring (Admin)**:
+    - Admin melihat perubahan status secara real-time di Dashboard.
+    - Admin dapat melacak riwayat posisi berkas jika ada kehilangan.
 
-2. **Persiapan File**
-   - Pastikan di dalam folder `dist` sudah ada file `.htaccess`. File ini otomatis tercopy dari folder `public` jika sudah dibuat.
-   - File `.htaccess` penting agar saat halaman direfresh tidak 404 (Not Found).
+## 🔐 Akun Default (Demo)
 
-3. **Upload ke cPanel**
-   - Buka File Manager di cPanel.
-   - Masuk ke folder `public_html` atau subdomain tujuan.
-   - **Upload semua isi folder `dist`** (bukan folder dist-nya, tapi isinya: `assets`, `index.html`, `.htaccess`, dll).
-
-4. **Konfigurasi**
-   - Pastikan file `.env` tidak ikut diupload jika berisi data sensitif, ATAU sesuaikan environment variable di hosting jika diperlukan (biasanya aplikasi React/Vite membaca env saat build, jadi pastikan `.env` sudah benar SAAT proses build di lokal).
+- **Admin**: `admin@rumahsakit.com` / `admin123`
+- **Petugas**: `petugas@rumahsakit.com` / `petugas123`
 
 ---
-Dikembangkan untuk mempermudah manajemen rekam medis rumah sakit.
+
+Dikembangkan untuk efisiensi rekam medis. Mendukung mode Offline & PWA.
