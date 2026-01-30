@@ -45,7 +45,7 @@ export const SyncProvider = ({ children }) => {
                 const parsed = JSON.parse(savedQueue)
                 if (Array.isArray(parsed)) {
                     setPendingQueue(parsed)
-                    console.log(`[Sync] Loaded ${parsed.length} pending items`)
+                    // console.log(`[Sync] Loaded ${parsed.length} pending items`)
                 }
             } catch (e) {
                 console.error('[Sync] Failed to load queue:', e)
@@ -81,7 +81,7 @@ export const SyncProvider = ({ children }) => {
         if (pendingQueue.length === 0 || isSyncing || !user) return
 
         setIsSyncing(true)
-        console.log('[Sync] Starting sync...', pendingQueue)
+        // console.log('[Sync] Starting sync...', pendingQueue)
 
         let processedCount = 0
         let tempQueue = [...pendingQueue]

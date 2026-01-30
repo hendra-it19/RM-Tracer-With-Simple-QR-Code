@@ -11,10 +11,12 @@ import {
 import {
     Search,
     ChevronRight,
+    ChevronLeft, // Added
     Activity,
     Filter,
     RefreshCw,
-    FileText
+    FileText,
+    Download // Added
 } from 'lucide-react'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'

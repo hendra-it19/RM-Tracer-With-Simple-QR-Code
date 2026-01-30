@@ -20,7 +20,7 @@ export const AuthProvider = ({ children }) => {
 
     // Fetch user profile
     const fetchProfile = async (userId) => {
-        console.log('[Auth] Fetching profile for user:', userId)
+        // console.log('[Auth] Fetching profile for user:', userId)
         try {
             const { data, error } = await supabase
                 .from('profiles')
@@ -31,7 +31,7 @@ export const AuthProvider = ({ children }) => {
             if (error) {
                 // Ignore AbortError which happens on reload/unmount
                 if (error.code === '20' || error.message?.includes('AbortError')) {
-                    console.log('[Auth] Profile fetch aborted (expected during reload)')
+                    // console.log('[Auth] Profile fetch aborted (expected during reload)')
                     return null
                 }
 
@@ -39,7 +39,7 @@ export const AuthProvider = ({ children }) => {
                 return null
             }
 
-            console.log('[Auth] Profile fetched:', data)
+            // console.log('[Auth] Profile fetched:', data)
             setProfile(data)
 
             // CACHE: Save to local storage
@@ -71,14 +71,14 @@ export const AuthProvider = ({ children }) => {
     // Initialize auth state
     useEffect(() => {
         let isMounted = true
-        console.log('[Auth] Initializing auth state...')
+        // console.log('[Auth] Initializing auth state...')
 
         // CACHE: Try to load profile from local storage immediately
         const cachedProfile = localStorage.getItem('app_user_profile')
         if (cachedProfile) {
             try {
                 const parsed = JSON.parse(cachedProfile)
-                console.log('[Auth] Loaded cached profile:', parsed)
+                // console.log('[Auth] Loaded cached profile:', parsed)
                 setProfile(parsed)
             } catch (e) {
                 console.error('[Auth] Failed to parse cached profile')
@@ -103,7 +103,7 @@ export const AuthProvider = ({ children }) => {
                     console.error('[Auth] Get session error:', error)
                 }
 
-                console.log('[Auth] Initial session:', session ? 'exists' : 'none')
+                // console.log('[Auth] Initial session:', session ? 'exists' : 'none')
 
                 if (isMounted) {
                     if (session?.user) {
@@ -136,7 +136,7 @@ export const AuthProvider = ({ children }) => {
         // Listen for auth changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
             async (event, session) => {
-                console.log('[Auth] Auth state changed:', event, session ? 'has session' : 'no session')
+                // console.log('[Auth] Auth state changed:', event, session ? 'has session' : 'no session')
 
                 if (isMounted) {
                     if (session?.user) {
@@ -162,7 +162,7 @@ export const AuthProvider = ({ children }) => {
 
     // Sign in with email and password
     const signIn = async (email, password) => {
-        console.log('[Auth] Attempting sign in for:', email)
+        // console.log('[Auth] Attempting sign in for:', email)
         try {
             setError(null)
             const { data, error } = await supabase.auth.signInWithPassword({
@@ -175,7 +175,7 @@ export const AuthProvider = ({ children }) => {
                 throw error
             }
 
-            console.log('[Auth] Sign in successful:', data.user?.id)
+            // console.log('[Auth] Sign in successful:', data.user?.id)
 
             // Log activity - don't wait for this, and handle silently
             supabase.rpc('log_activity', {
@@ -195,7 +195,7 @@ export const AuthProvider = ({ children }) => {
 
     // Sign up new user
     const signUp = async (email, password, metadata = {}) => {
-        console.log('[Auth] Attempting sign up for:', email)
+        // console.log('[Auth] Attempting sign up for:', email)
         try {
             setError(null)
             const { data, error } = await supabase.auth.signUp({
@@ -211,7 +211,7 @@ export const AuthProvider = ({ children }) => {
                 throw error
             }
 
-            console.log('[Auth] Sign up successful:', data)
+            // console.log('[Auth] Sign up successful:', data)
             return { data, error: null }
         } catch (err) {
             console.error('[Auth] Sign up failed:', err)
@@ -222,7 +222,7 @@ export const AuthProvider = ({ children }) => {
 
     // Sign out
     const signOut = async () => {
-        console.log('[Auth] Signing out...')
+        // console.log('[Auth] Signing out...')
         try {
             // Log activity before signing out - don't wait
             supabase.rpc('log_activity', {
@@ -237,7 +237,7 @@ export const AuthProvider = ({ children }) => {
                 // We don't throw here, we want to clear local state regardless
             }
 
-            console.log('[Auth] Signed out successfully (or forced locally)')
+            // console.log('[Auth] Signed out successfully (or forced locally)')
         } catch (err) {
             console.error('[Auth] Error signing out:', err)
         } finally {
@@ -250,7 +250,7 @@ export const AuthProvider = ({ children }) => {
 
     // Update password
     const updatePassword = async (newPassword) => {
-        console.log('[Auth] Updating password...')
+        // console.log('[Auth] Updating password...')
         try {
             setError(null)
             const { data, error } = await supabase.auth.updateUser({
@@ -262,7 +262,7 @@ export const AuthProvider = ({ children }) => {
                 throw error
             }
 
-            console.log('[Auth] Password updated successfully')
+            // console.log('[Auth] Password updated successfully')
             return { data, error: null }
         } catch (err) {
             console.error('[Auth] Update password failed:', err)
@@ -273,7 +273,7 @@ export const AuthProvider = ({ children }) => {
 
     // Update profile
     const updateProfile = async (updates) => {
-        console.log('[Auth] Updating profile:', updates)
+        // console.log('[Auth] Updating profile:', updates)
         try {
             setError(null)
             const { data, error } = await supabase
@@ -288,7 +288,7 @@ export const AuthProvider = ({ children }) => {
                 throw error
             }
 
-            console.log('[Auth] Profile updated:', data)
+            // console.log('[Auth] Profile updated:', data)
             setProfile(data)
             return { data, error: null }
         } catch (err) {

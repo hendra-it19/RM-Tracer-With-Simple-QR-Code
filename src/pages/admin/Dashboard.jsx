@@ -10,10 +10,10 @@ import {
     TrendingUp,
     MapPin
 } from 'lucide-react'
-import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, PointElement, LineElement } from 'chart.js'
+import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, PointElement, LineElement, Filler } from 'chart.js'
 import { Doughnut, Line } from 'react-chartjs-2'
 
-ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, PointElement, LineElement)
+ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, PointElement, LineElement, Filler)
 
 const Dashboard = () => {
     const [stats, setStats] = useState({
@@ -23,6 +23,8 @@ const Dashboard = () => {
         missingFiles: 0,
         stuckFiles: 0
     })
+
+    const [trendData, setTrendData] = useState([]) // Array of {date, count}
 
     // ... state ...
 
@@ -90,7 +92,7 @@ const Dashboard = () => {
         }
     }, [])
 
-    const [trendData, setTrendData] = useState([]) // Array of {date, count}
+
 
     // ... useEffect ...
 
@@ -160,7 +162,34 @@ const Dashboard = () => {
         }
     }
 
-    // ... fetchStatusCounts ...
+    const fetchStatusCounts = async () => {
+        try {
+            const { data } = await supabase
+                .from('tracer')
+                .select('status_lokasi')
+
+            // Count occurrences of each status
+            const counts = {}
+            STATUS_LOKASI.forEach(s => counts[s.value] = 0)
+
+            data?.forEach(item => {
+                if (counts[item.status_lokasi] !== undefined) {
+                    counts[item.status_lokasi]++
+                }
+            })
+
+            const statusData = STATUS_LOKASI.map(s => ({
+                label: s.label,
+                count: counts[s.value] || 0,
+                color: s.color,
+                value: s.value
+            }))
+
+            setStatusCounts(statusData)
+        } catch (error) {
+            console.error('Error fetching status counts:', error)
+        }
+    }
 
     const fetchTrendData = async () => {
         try {
