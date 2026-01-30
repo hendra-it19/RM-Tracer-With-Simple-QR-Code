@@ -10,13 +10,14 @@ import {
 } from '../../utils/helpers'
 import {
     Search,
-    Download,
-    ChevronLeft,
     ChevronRight,
     Activity,
     Filter,
-    RefreshCw
+    RefreshCw,
+    FileText
 } from 'lucide-react'
+import jsPDF from 'jspdf'
+import autoTable from 'jspdf-autotable'
 
 const ActivityLog = () => {
     const [logs, setLogs] = useState([])
@@ -134,6 +135,79 @@ const ActivityLog = () => {
         setCurrentPage(1)
     }
 
+    const handleExportPDF = async () => {
+        try {
+            // Fetch all logs with current filters
+            let query = supabase
+                .from('activity_logs')
+                .select(`
+          *,
+          profiles:user_id (nama, email)
+        `)
+                .order('created_at', { ascending: false })
+                .limit(1000)
+
+            if (filters.search) {
+                query = query.ilike('no_rm', `%${filters.search}%`)
+            }
+            if (filters.user_id) {
+                query = query.eq('user_id', filters.user_id)
+            }
+            if (filters.date_from) {
+                query = query.gte('created_at', filters.date_from)
+            }
+            if (filters.date_to) {
+                const endDate = new Date(filters.date_to)
+                endDate.setDate(endDate.getDate() + 1)
+                query = query.lt('created_at', endDate.toISOString())
+            }
+
+            const { data, error } = await query
+
+            if (error) throw error
+
+            // Create PDF
+            const doc = new jsPDF()
+
+            // Add Header
+            doc.setFontSize(18)
+            doc.text('RUMAH SAKIT UMUM DAERAH', 105, 20, { align: 'center' })
+            doc.setFontSize(14)
+            doc.text('LAPORAN AKTIVITAS SISTEM REKAM MEDIS', 105, 30, { align: 'center' })
+
+            doc.setFontSize(10)
+            doc.text(`Dicetak pada: ${formatDateTime(new Date().toISOString())}`, 14, 45)
+            doc.text(`Filter: ${filters.date_from ? filters.date_from : 'Awal'} s/d ${filters.date_to ? filters.date_to : 'Sekarang'}`, 14, 50)
+
+            // Add Table
+            const tableData = data.map(log => [
+                formatDateTime(log.created_at),
+                log.profiles?.nama || '-',
+                log.aksi,
+                log.no_rm || '-',
+                log.details?.status_lokasi
+                    ? getStatusLabel(log.details.status_lokasi, STATUS_LOKASI)
+                    : (log.details?.keterangan || '-')
+            ])
+
+            autoTable(doc, {
+                startY: 55,
+                head: [['Waktu', 'User', 'Aksi', 'No RM', 'Detail / Lokasi']],
+                body: tableData,
+                theme: 'grid',
+                headStyles: { fillColor: [41, 128, 185] },
+                styles: { fontSize: 8 },
+            })
+
+            // Save PDF
+            doc.save(`laporan-aktivitas-${new Date().toISOString().split('T')[0]}.pdf`)
+            success('Laporan PDF berhasil didownload')
+        } catch (err) {
+            showError('Gagal membuat laporan PDF')
+            console.error(err)
+        }
+    }
+
     const handleExportCSV = async () => {
         try {
             // Fetch all logs with current filters
@@ -208,6 +282,14 @@ const ActivityLog = () => {
                         <span className="badge badge-primary">
                             <RefreshCw size={12} /> Realtime
                         </span>
+                        <button
+                            className="btn btn-secondary"
+                            onClick={handleExportPDF}
+                            disabled={logs.length === 0}
+                        >
+                            <FileText size={18} />
+                            Export PDF
+                        </button>
                         <button
                             className="btn btn-secondary"
                             onClick={handleExportCSV}

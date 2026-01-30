@@ -13,14 +13,21 @@ Aplikasi ini dapat digunakan tanpa koneksi internet (offline).
 - **Indikator Status**: Notifikasi visual status koneksi dan jumlah antrian data.
 - **Installable**: Dapat diinstal sebagai aplikasi desktop/mobile (PWA).
 
-### 2. �️ Admin Dashboard
+### 2. 🛡️ Admin Dashboard (Enhanced)
 
 - **Monitoring Real-time**: Pantau lokasi berkas terkini.
-- **Manajemen User**: Tambah, edit, dan **hapus** akun petugas/admin (Fitur hapus akun aman dengan audit trail).
+- **⚠️ Deteksi Berkas Macet**: Otomatis mendeteksi berkas yang tidak bergerak > 24 jam untuk mencegah kehilangan.
+- **📈 Tren Aktivitas**: Grafik visual aktivitas harian (7 hari terakhir) untuk analisa beban kerja.
+- **Manajemen User**: Tambah, edit, dan **hapus** akun petugas/admin.
 - **Manajemen Pasien**: CRUD data pasien dan cetak kartu QR.
-- **Log Aktivitas**: Riwayat lengkap setiap perubahan data dan scan.
 
-### 3. 👨‍⚕️ Petugas Lapangan
+### 3. 📄 Pelaporan & Aktivitas
+
+- **Log Audit Lengkap**: Mencatat setiap aksi (Create, Update, Delete, Login).
+- **Export PDF**: Unduh laporan aktivitas resmi dengan kop surat rumah sakit.
+- **Export CSV**: Unduh data mentah untuk olah data lebih lanjut.
+
+### 4. 👨‍⚕️ Petugas Lapangan
 
 - **QR Scanner Terintegrasi**: Scan cepat menggunakan kamera perangkat.
 - **Update Lokasi**: Memperbarui status lokasi berkas (Gudang, Poliklinik, Rawat Inap, dll).
@@ -33,10 +40,10 @@ Aplikasi ini dapat digunakan tanpa koneksi internet (offline).
 - **Styling**: CSS (Responsive & Modern UI)
 - **Database & Auth**: Supabase (PostgreSQL)
 - **PWA**: Vite PWA Plugin + Custom Sync Context
+- **Reporting**: `jspdf`, `jspdf-autotable`, `chart.js`
 - **Libraries**:
   - `react-router-dom` (Routing)
   - `lucide-react` (Icons)
-  - `chart.js` (Visualisasi Data)
   - `qrcode.react` (Generator QR)
 
 ## 📦 Instalasi & Cara Pakai
@@ -59,6 +66,8 @@ Aplikasi ini dapat digunakan tanpa koneksi internet (offline).
 
     ```bash
     npm install
+    # Install dependencies baru
+    npm install jspdf jspdf-autotable chart.js react-chartjs-2
     ```
 
 3.  **Konfigurasi Environment**
@@ -89,8 +98,8 @@ Aplikasi ini dapat digunakan tanpa koneksi internet (offline).
     - Pilih lokasi tujuan baru (misal: "Dikirim ke Poli").
     - _Jika Offline_: Data disimpan lokal dan akan di-upload saat online.
 3.  **Monitoring (Admin)**:
-    - Admin melihat perubahan status secara real-time di Dashboard.
-    - Admin dapat melacak riwayat posisi berkas jika ada kehilangan.
+    - Admin melihat dashboard untuk cek berkas macet dan tren aktivitas.
+    - Admin dapat mencetak laporan PDF dari menu Log Aktivitas.
 
 ## 🔐 Akun Default (Demo)
 

@@ -10,18 +10,55 @@ import {
     TrendingUp,
     MapPin
 } from 'lucide-react'
-import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js'
-import { Doughnut } from 'react-chartjs-2'
+import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, PointElement, LineElement } from 'chart.js'
+import { Doughnut, Line } from 'react-chartjs-2'
 
-ChartJS.register(ArcElement, Tooltip, Legend)
+ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, PointElement, LineElement)
 
 const Dashboard = () => {
     const [stats, setStats] = useState({
         totalPatients: 0,
         activeFiles: 0,
         todayActivity: 0,
-        missingFiles: 0
+        missingFiles: 0,
+        stuckFiles: 0
     })
+
+    // ... state ...
+
+    // ... chartData & chartOptions ...
+
+    const trendChartData = {
+        labels: trendData.map(d => d.date),
+        datasets: [
+            {
+                label: 'Jumlah Aktivitas',
+                data: trendData.map(d => d.count),
+                borderColor: '#3b82f6',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                tension: 0.3,
+                fill: true
+            }
+        ]
+    }
+
+    const trendChartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    precision: 0
+                }
+            }
+        }
+    }
     const [statusCounts, setStatusCounts] = useState([])
     const [recentActivity, setRecentActivity] = useState([])
     const [loading, setLoading] = useState(true)
@@ -53,12 +90,17 @@ const Dashboard = () => {
         }
     }, [])
 
+    const [trendData, setTrendData] = useState([]) // Array of {date, count}
+
+    // ... useEffect ...
+
     const fetchDashboardData = async () => {
         setLoading(true)
         await Promise.all([
             fetchStats(),
             fetchStatusCounts(),
-            fetchRecentActivity()
+            fetchRecentActivity(),
+            fetchTrendData()
         ])
         setLoading(false)
     }
@@ -73,19 +115,29 @@ const Dashboard = () => {
             // Get latest tracer status for each patient to count active files
             const { data: tracerData } = await supabase
                 .from('tracer')
-                .select('patient_id, status_lokasi')
+                .select('patient_id, status_lokasi, updated_at') // Fetch updated_at
                 .order('updated_at', { ascending: false })
 
             // Count unique active files (not lost)
             const latestStatus = {}
             tracerData?.forEach(t => {
                 if (!latestStatus[t.patient_id]) {
-                    latestStatus[t.patient_id] = t.status_lokasi
+                    latestStatus[t.patient_id] = t
                 }
             })
 
-            const activeCount = Object.values(latestStatus).filter(s => s !== 'hilang').length
-            const missingCount = Object.values(latestStatus).filter(s => s === 'hilang').length
+            const activeCount = Object.values(latestStatus).filter(s => s.status_lokasi !== 'hilang').length
+            const missingCount = Object.values(latestStatus).filter(s => s.status_lokasi === 'hilang').length
+
+            // Calculate Stuck Files (> 24 hours not updated)
+            const now = new Date()
+            const stuckCount = Object.values(latestStatus).filter(s => {
+                if (s.status_lokasi === 'hilang') return false
+                const lastUpdate = new Date(s.updated_at)
+                const diffTime = Math.abs(now - lastUpdate)
+                const diffHours = Math.ceil(diffTime / (1000 * 60 * 60))
+                return diffHours > 24
+            }).length
 
             // Today's activity
             const today = new Date()
@@ -100,38 +152,53 @@ const Dashboard = () => {
                 totalPatients: patientCount || 0,
                 activeFiles: activeCount,
                 todayActivity: activityCount || 0,
-                missingFiles: missingCount
+                missingFiles: missingCount,
+                stuckFiles: stuckCount // Added
             })
         } catch (error) {
             console.error('Error fetching stats:', error)
         }
     }
 
-    const fetchStatusCounts = async () => {
-        try {
-            // Get latest status for each patient
-            const { data: tracerData } = await supabase
-                .from('tracer')
-                .select('patient_id, status_lokasi')
-                .order('updated_at', { ascending: false })
+    // ... fetchStatusCounts ...
 
-            // Group by latest status
-            const latestStatus = {}
-            tracerData?.forEach(t => {
-                if (!latestStatus[t.patient_id]) {
-                    latestStatus[t.patient_id] = t.status_lokasi
+    const fetchTrendData = async () => {
+        try {
+            const endDate = new Date()
+            const startDate = new Date()
+            startDate.setDate(endDate.getDate() - 6) // Last 7 days
+
+            const { data } = await supabase
+                .from('activity_logs')
+                .select('created_at')
+                .gte('created_at', startDate.toISOString())
+                .order('created_at', { ascending: true })
+
+            // Group by date
+            const grouped = {}
+            // Initialize last 7 days with 0
+            for (let i = 0; i < 7; i++) {
+                const d = new Date(startDate)
+                d.setDate(d.getDate() + i)
+                const key = d.toISOString().split('T')[0]
+                grouped[key] = 0
+            }
+
+            data?.forEach(item => {
+                const date = item.created_at.split('T')[0]
+                if (grouped[date] !== undefined) {
+                    grouped[date]++
                 }
             })
 
-            // Count each status
-            const counts = STATUS_LOKASI.map(status => ({
-                ...status,
-                count: Object.values(latestStatus).filter(s => s === status.value).length
+            const chartData = Object.keys(grouped).map(date => ({
+                date: new Date(date).toLocaleDateString('id-ID', { weekday: 'short' }),
+                count: grouped[date]
             }))
 
-            setStatusCounts(counts)
-        } catch (error) {
-            console.error('Error fetching status counts:', error)
+            setTrendData(chartData)
+        } catch (err) {
+            console.error('Error fetching trend:', err)
         }
     }
 
@@ -229,6 +296,12 @@ const Dashboard = () => {
                         <div className="stat-label">Berkas Hilang</div>
                         <AlertCircle className="stat-icon" size={48} />
                     </div>
+
+                    <div className="stat-card warning">
+                        <div className="stat-value">{stats.stuckFiles}</div>
+                        <div className="stat-label">Berkas Macet (&gt;24 Jam)</div>
+                        <TrendingUp className="stat-icon" size={48} style={{ transform: 'rotate(90deg)' }} />
+                    </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-lg">
@@ -291,6 +364,20 @@ const Dashboard = () => {
                                     <p>Belum ada aktivitas</p>
                                 </div>
                             )}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Trend Chart */}
+                <div className="card mt-lg">
+                    <div className="card-header">
+                        <h2 style={{ fontSize: '1.125rem', fontWeight: 600 }}>
+                            Tren Aktivitas (7 Hari Terakhir)
+                        </h2>
+                    </div>
+                    <div className="card-body">
+                        <div className="chart-container" style={{ height: '300px' }}>
+                            <Line data={trendChartData} options={trendChartOptions} />
                         </div>
                     </div>
                 </div>
