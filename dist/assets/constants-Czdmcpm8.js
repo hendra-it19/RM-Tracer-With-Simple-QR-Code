@@ -1,1 +1,0 @@
-const a=[{value:"ruang_rawat_inap",label:"Ruang Rawat Inap",color:"#10b981"},{value:"poli",label:"Poli",color:"#3b82f6"},{value:"casemix",label:"Casemix",color:"#8b5cf6"},{value:"rekam_medis",label:"Rekam Medis",color:"#f59e0b"},{value:"hilang",label:"Hilang",color:"#ef4444"}],l=10,e=5e3;export{l as I,a as S,e as U};
