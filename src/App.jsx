@@ -1,4 +1,10 @@
 import { Suspense, lazy } from 'react'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { AuthProvider, useAuth } from './contexts/AuthContext'
+import { ToastProvider } from './contexts/ToastContext'
+import { SyncProvider } from './contexts/SyncContext'
+import OfflineStatus from './components/OfflineStatus'
+import InstallPWA from './components/InstallPWA'
 
 // Pages
 const Login = lazy(() => import('./pages/Login'))
@@ -13,8 +19,7 @@ const ActivityLog = lazy(() => import('./pages/admin/ActivityLog'))
 const PrintQR = lazy(() => import('./pages/admin/PrintQR'))
 const AdminProfile = lazy(() => import('./pages/admin/Profile'))
 
-// PWA Install Prompt
-import InstallPWA from './components/InstallPWA'
+
 
 // Petugas Pages
 const PetugasLayout = lazy(() => import('./components/layout/PetugasLayout'))
