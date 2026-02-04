@@ -205,9 +205,16 @@ const Users = () => {
 
             success(`User ${user.nama} berhasil dihapus`)
             fetchUsers()
+            setLoading(false)
         } catch (err) {
-            showError(err.message || 'Gagal menghapus user')
             console.error(err)
+            if (err.message && err.message.includes('delete_user_by_admin')) {
+                showError('Gagal: Fungsi hapus user belum dikonfigurasi di database. Hubungi Administrator.')
+            } else if (err.message && err.message.includes('Access denied')) {
+                showError('Akses ditolak: Hanya admin yang dapat menghapus user.')
+            } else {
+                showError(err.message || 'Gagal menghapus user')
+            }
             setLoading(false)
         }
     }

@@ -8,7 +8,10 @@ import {
     LogOut,
     QrCode,
     Menu,
-    X
+    X,
+    MapPin,
+    UserCheck,
+    FolderOpen
 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -32,7 +35,10 @@ const AdminLayout = () => {
 
     const navItems = [
         { path: '/admin', icon: LayoutDashboard, label: 'Dashboard', end: true },
+        { path: '/admin/files', icon: FolderOpen, label: 'Monitoring Berkas' },
         { path: '/admin/patients', icon: FileText, label: 'Pasien & Berkas' },
+        { path: '/admin/locations', icon: MapPin, label: 'Lokasi Berkas' },
+        { path: '/admin/staff', icon: UserCheck, label: 'Petugas Pengambil' },
         { path: '/admin/users', icon: Users, label: 'Manajemen User' },
         { path: '/admin/logs', icon: Activity, label: 'Log Aktivitas' },
         { path: '/admin/profile', icon: Users, label: 'Profil Saya' }

@@ -4,34 +4,45 @@ Aplikasi manajemen rekam medis rumah sakit berbasis web yang memanfaatkan teknol
 
 ## 🚀 Fitur Utama
 
-### 1. 📡 Offline-First System (PWA)
+### 1. 📡 Offline-First System (PWA) & iOS Compatible
 
-Aplikasi ini dapat digunakan tanpa koneksi internet (offline).
+Aplikasi ini dapat digunakan tanpa koneksi internet (offline) dan mendukung berbagai perangkat.
 
 - **Scan Offline**: Petugas dapat memindai QR code saat offline. Data akan disimpan dalam antrian lokal.
 - **Auto-Sync**: Saat koneksi internet kembali, aplikasi otomatis menyinkronkan data pending ke server.
+- **Support iOS**: Tampilan dan instruksi instalasi khusus untuk pengguna iPhone/iPad (Add to Home Screen).
 - **Indikator Status**: Notifikasi visual status koneksi dan jumlah antrian data.
-- **Installable**: Dapat diinstal sebagai aplikasi desktop/mobile (PWA).
 
-### 2. 🛡️ Admin Dashboard (Enhanced)
+### 2. 📂 Manajemen Berkas & Dashboard (Baru)
 
-- **Monitoring Real-time**: Pantau lokasi berkas terkini.
-- **⚠️ Deteksi Berkas Macet**: Otomatis mendeteksi berkas yang tidak bergerak > 24 jam untuk mencegah kehilangan.
-- **📈 Tren Aktivitas**: Grafik visual aktivitas harian (7 hari terakhir) untuk analisa beban kerja.
-- **Manajemen User**: Tambah, edit, dan **hapus** akun petugas/admin.
+- **Monitoring Berkas Real-time**: Dashboard khusus untuk melihat posisi berkas secara live.
+    - **Tersedia di Rak**: Daftar berkas yang ada di penyimpanan (Rekam Medis).
+    - **Sedang Dipinjam**: Daftar berkas yang sedang berada di luar (Poli/Rawat Inap), lengkap dengan info peminjam.
+- **Smart Location Logic**:
+    - **Otomatisasi Pengembalian**: Jika lokasi tujuan adalah "Ruangan Penyimpanan", sistem otomatis mencatat pengembalian tanpa perlu input nama petugas.
+    - **Validasi Peminjaman**: Jika lokasi tujuan bukan penyimpanan, petugas wajib memilih nama "Petugas Pengambil" untuk akuntabilitas.
+- **Manajemen Referensi**: Admin dapat mengelola Master Data **Lokasi Berkas** dan **Data Petugas/Kurir** secara dinamis.
+
+### 3. 🛡️ Admin Dashboard (Refactored)
+
+- **Manajemen Akun Terpadu**: Tambah, edit, dan **hapus** akun petugas dengan aman.
+- **Deteksi Berkas Macet**: Otomatis mendeteksi berkas yang tidak bergerak > 24 jam.
 - **Manajemen Pasien**: CRUD data pasien dan cetak kartu QR.
 
-### 3. 📄 Pelaporan & Aktivitas
+### 4. 📄 Pelaporan & Aktivitas
 
-- **Log Audit Lengkap**: Mencatat setiap aksi (Create, Update, Delete, Login).
+- **Log Audit Lengkap**: Mencatat setiap aksi perpindahan berkas, lengkap dengan:
+    - Lokasi Awal & Tujuan
+    - Waktu Transaksi
+    - **Nama Petugas Peminjam** (jika berkas keluar)
+- **Filter Canggih**: Cari riwayat berdasarkan Lokasi, Nama Petugas, No RM, atau Rentang Tanggal.
 - **Export PDF**: Unduh laporan aktivitas resmi dengan kop surat rumah sakit.
-- **Export CSV**: Unduh data mentah untuk olah data lebih lanjut.
 
-### 4. 👨‍⚕️ Petugas Lapangan
+### 5. 👨‍⚕️ Petugas Lapangan
 
 - **QR Scanner Terintegrasi**: Scan cepat menggunakan kamera perangkat.
-- **Update Lokasi**: Memperbarui status lokasi berkas (Gudang, Poliklinik, Rawat Inap, dll).
-- **Riwayat Scan**: Melihat histori pemindahan berkas.
+- **Antarmuka Cerdas**: Form scan otomatis menyesuaikan field input berdasarkan apakah berkas dikembalikan ke rak atau dipinjam keluar.
+- **Riwayat Pribadi**: Petugas dapat melihat riwayat scan yang mereka lakukan sendiri.
 
 ## 🛠️ Tech Stack
 
@@ -42,9 +53,9 @@ Aplikasi ini dapat digunakan tanpa koneksi internet (offline).
 - **PWA**: Vite PWA Plugin + Custom Sync Context
 - **Reporting**: `jspdf`, `jspdf-autotable`, `chart.js`
 - **Libraries**:
-  - `react-router-dom` (Routing)
-  - `lucide-react` (Icons)
-  - `qrcode.react` (Generator QR)
+    - `react-router-dom` (Routing)
+    - `lucide-react` (Icons)
+    - `qrcode.react` (Generator QR)
 
 ## 📦 Instalasi & Cara Pakai
 
@@ -66,7 +77,7 @@ Aplikasi ini dapat digunakan tanpa koneksi internet (offline).
 
     ```bash
     npm install
-    # Install dependencies baru
+    # Install dependencies laporan & grafik
     npm install jspdf jspdf-autotable chart.js react-chartjs-2
     ```
 
@@ -79,9 +90,11 @@ Aplikasi ini dapat digunakan tanpa koneksi internet (offline).
     ```
 
 4.  **Setup Database (Supabase)**
-    Buka SQL Editor di Dashboard Supabase dan jalankan file berikut secara berurutan:
-    - `supabase/schema.sql` (Struktur dasar tabel)
-    - `supabase/fix_account_deletion.sql` (Patch untuk fitur hapus akun & constraint)
+    Buka SQL Editor di Dashboard Supabase dan jalankan file berikut secara berurutan untuk struktur database terbaru:
+    1. `supabase/schema.sql` (Schema dasar)
+    2. `supabase/fix_account_deletion.sql` (Fitur hapus akun)
+    3. `supabase/update_schema.sql` (Tabel Locations & Staff)
+    4. `supabase/add_storage_flag.sql` (Fitur Smart Storage Logic)
 
 5.  **Jalankan Aplikasi**
     ```bash
@@ -92,14 +105,11 @@ Aplikasi ini dapat digunakan tanpa koneksi internet (offline).
 ## 🔄 Alur Kerja Sistem
 
 1.  **Login**: User masuk menggunakan email & password.
-2.  **Pindai Berkas (Petugas)**:
-    - Buka menu Scan.
-    - Arahkan kamera ke QR Code berkas.
-    - Pilih lokasi tujuan baru (misal: "Dikirim ke Poli").
-    - _Jika Offline_: Data disimpan lokal dan akan di-upload saat online.
-3.  **Monitoring (Admin)**:
-    - Admin melihat dashboard untuk cek berkas macet dan tren aktivitas.
-    - Admin dapat mencetak laporan PDF dari menu Log Aktivitas.
+2.  **Monitoring**: Admin memantau menu "Monitoring Berkas" untuk melihat berkas yang keluar vs di rak.
+3.  **Transaksi (Petugas Scan/Admin)**:
+    - **Peminjaman**: Scan QR -> Pilih lokasi (misal: Poli Gigi) -> **Wajib** pilih "Petugas Pengambil".
+    - **Pengembalian**: Scan QR -> Pilih lokasi (misal: Rak RM) -> Input petugas **Hilang** (Otomatis).
+4.  **Laporan**: Admin mengunduh rekap aktivitas via menu Log Aktivitas.
 
 ## 🔐 Akun Default (Demo)
 
@@ -108,4 +118,4 @@ Aplikasi ini dapat digunakan tanpa koneksi internet (offline).
 
 ---
 
-Dikembangkan untuk efisiensi rekam medis. Mendukung mode Offline & PWA.
+Dikembangkan untuk efisiensi rekam medis. Mendukung mode Offline & PWA di Android/iOS/Windows.

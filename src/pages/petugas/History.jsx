@@ -2,26 +2,33 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../../config/supabase'
 import { useAuth } from '../../contexts/AuthContext'
-import { STATUS_LOKASI } from '../../utils/constants'
+import { useReferenceData } from '../../hooks/useReferenceData'
 import {
     formatDateTime,
     formatDate,
-    getStatusLabel,
-    getStatusColor
+    getStatusLabel
 } from '../../utils/helpers'
-import { Clock, MapPin, FileText, ChevronRight } from 'lucide-react'
+import { Clock, MapPin, FileText, ChevronRight, Search, Users, Calendar } from 'lucide-react'
 
 const History = () => {
     const { profile } = useAuth()
+    const { locations, staff, loading: loadingRef } = useReferenceData()
+
     const [history, setHistory] = useState([])
     const [loading, setLoading] = useState(true)
-    const [filter, setFilter] = useState('today')
+
+    // Filter State
+    const [timeFilter, setTimeFilter] = useState('today') // today, week, month, custom
+    const [search, setSearch] = useState('')
+    const [locationId, setLocationId] = useState('')
+    const [staffId, setStaffId] = useState('')
+    const [dateRange, setDateRange] = useState({ start: '', end: '' })
 
     useEffect(() => {
         if (profile?.id) {
             fetchHistory()
         }
-    }, [profile, filter])
+    }, [profile, timeFilter, search, locationId, staffId, dateRange])
 
     const fetchHistory = async () => {
         setLoading(true)
@@ -33,22 +40,51 @@ const History = () => {
                 .eq('user_id', profile.id)
                 .in('aksi', ['UPDATE_STATUS', 'SCAN_QR'])
                 .order('created_at', { ascending: false })
-                .limit(50)
+                .limit(100)
 
-            // Apply date filter
+            // 1. Time Filters
             const now = new Date()
-            if (filter === 'today') {
+            if (timeFilter === 'today') {
                 const today = new Date()
                 today.setHours(0, 0, 0, 0)
                 query = query.gte('created_at', today.toISOString())
-            } else if (filter === 'week') {
+            } else if (timeFilter === 'week') {
                 const weekAgo = new Date()
                 weekAgo.setDate(weekAgo.getDate() - 7)
                 query = query.gte('created_at', weekAgo.toISOString())
-            } else if (filter === 'month') {
+            } else if (timeFilter === 'month') {
                 const monthAgo = new Date()
                 monthAgo.setMonth(monthAgo.getMonth() - 1)
                 query = query.gte('created_at', monthAgo.toISOString())
+            } else if (timeFilter === 'custom') {
+                if (dateRange.start) query = query.gte('created_at', dateRange.start)
+                if (dateRange.end) {
+                    const endDate = new Date(dateRange.end)
+                    endDate.setDate(endDate.getDate() + 1)
+                    query = query.lt('created_at', endDate.toISOString())
+                }
+            }
+
+            // 2. Search
+            if (search) {
+                query = query.ilike('no_rm', `%${search}%`)
+            }
+
+            // 3. Details Filters
+            // Note: details->status_lokasi stores Location ID (new) or Code (old)
+            // details->staff_name stores Staff Name (string) 
+            // We can filter by seeing if the JSON contains a key/value
+
+            if (locationId) {
+                query = query.contains('details', { status_lokasi: locationId })
+            }
+
+            // Filter by Staff Name since we stored name in details in Scan.jsx
+            if (staffId) {
+                const s = staff.find(x => x.id === staffId)
+                if (s) {
+                    query = query.contains('details', { staff_name: s.nama })
+                }
             }
 
             const { data, error } = await query
@@ -78,120 +114,133 @@ const History = () => {
         setLoading(false)
     }
 
-    const filterOptions = [
+    const timeOptions = [
         { value: 'today', label: 'Hari Ini' },
         { value: 'week', label: 'Minggu Ini' },
-        { value: 'month', label: 'Bulan Ini' }
+        { value: 'month', label: 'Bulan Ini' },
+        { value: 'custom', label: 'Range Tanggal' }
     ]
 
     return (
         <div className="flex flex-col gap-md">
-            {/* Filter Tabs */}
-            <div className="flex gap-sm">
-                {filterOptions.map(option => (
+            {/* Main Tabs */}
+            <div className="flex gap-sm overflow-x-auto pb-2 scrollbar-hide">
+                {timeOptions.map(option => (
                     <button
                         key={option.value}
-                        className={`btn btn-sm ${filter === option.value ? 'btn-primary' : 'btn-secondary'}`}
-                        onClick={() => setFilter(option.value)}
+                        className={`btn btn-sm ${timeFilter === option.value ? 'btn-primary' : 'btn-secondary'}`}
+                        onClick={() => setTimeFilter(option.value)}
+                        style={{ whiteSpace: 'nowrap' }}
                     >
                         {option.label}
                     </button>
                 ))}
             </div>
 
-            {/* History List */}
-            {loading ? (
-                <div className="flex flex-col gap-md">
-                    {[1, 2, 3].map(i => (
-                        <div key={i}>
-                            <div className="skeleton skeleton-text mb-sm" style={{ width: '50%' }}></div>
-                            <div className="card">
-                                <div className="card-body">
-                                    <div className="skeleton skeleton-text"></div>
-                                    <div className="skeleton skeleton-text mt-sm" style={{ width: '70%' }}></div>
-                                </div>
+            {/* Sub Filters */}
+            <div className="card">
+                <div className="card-body p-sm">
+                    <div className="flex flex-col gap-sm">
+
+                        {/* Search & Custom Date */}
+                        <div className="flex gap-sm">
+                            <div className="search-box flex-1">
+                                <Search className="search-box-icon" size={16} />
+                                <input
+                                    type="text"
+                                    className="form-input form-input-sm"
+                                    placeholder="Cari No RM..."
+                                    value={search}
+                                    onChange={e => setSearch(e.target.value)}
+                                />
                             </div>
                         </div>
-                    ))}
+
+                        {timeFilter === 'custom' && (
+                            <div className="flex gap-sm">
+                                <input type="date" className="form-input form-input-sm" value={dateRange.start} onChange={e => setDateRange({ ...dateRange, start: e.target.value })} placeholder="Mulai" />
+                                <input type="date" className="form-input form-input-sm" value={dateRange.end} onChange={e => setDateRange({ ...dateRange, end: e.target.value })} placeholder="Selesai" />
+                            </div>
+                        )}
+
+                        {/* Location & Staff */}
+                        <div className="flex gap-sm">
+                            <select
+                                className="form-input form-input-sm"
+                                value={locationId}
+                                onChange={e => setLocationId(e.target.value)}
+                                style={{ width: '50%' }}
+                            >
+                                <option value="">Semua Lokasi</option>
+                                {locations.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
+                            </select>
+
+                            <select
+                                className="form-input form-input-sm"
+                                value={staffId}
+                                onChange={e => setStaffId(e.target.value)}
+                                style={{ width: '50%' }}
+                            >
+                                <option value="">Semua Petugas</option>
+                                {staff.map(s => <option key={s.id} value={s.id}>{s.nama}</option>)}
+                            </select>
+                        </div>
+                    </div>
                 </div>
+            </div>
+
+            {/* History List */}
+            {loading ? (
+                <div className="flex justify-center p-lg"><div className="spinner"></div></div>
             ) : history.length === 0 ? (
                 <div className="empty-state">
                     <Clock size={48} style={{ opacity: 0.3 }} />
-                    <p className="empty-state-title mt-md">Belum ada riwayat</p>
-                    <p className="empty-state-description">
-                        Aktivitas scan Anda akan muncul di sini
-                    </p>
+                    <p className="empty-state-title mt-md">Tidak ada data</p>
                 </div>
             ) : (
                 <div className="flex flex-col gap-lg">
                     {history.map(group => (
                         <div key={group.date}>
-                            <h3
-                                className="text-sm font-semibold text-secondary mb-sm"
-                                style={{ paddingLeft: 4 }}
-                            >
+                            <h3 className="text-sm font-semibold text-secondary mb-sm pl-1">
                                 {group.dateLabel}
                             </h3>
 
                             <div className="card">
                                 <div style={{ padding: 0 }}>
                                     {group.items.map((item, index) => (
-                                        <Link
+                                        <div
                                             key={item.id}
-                                            to="/petugas/scan"
-                                            state={{ noRm: item.no_rm }}
-                                            className="flex items-center gap-md"
+                                            className="flex flex-col gap-xs"
                                             style={{
                                                 padding: 'var(--spacing-md)',
                                                 borderBottom: index < group.items.length - 1 ? '1px solid var(--border)' : 'none',
-                                                textDecoration: 'none',
-                                                color: 'inherit'
                                             }}
                                         >
-                                            <div
-                                                style={{
-                                                    width: 40,
-                                                    height: 40,
-                                                    borderRadius: 'var(--radius-lg)',
-                                                    background: item.details?.status_lokasi
-                                                        ? `${getStatusColor(item.details.status_lokasi, STATUS_LOKASI)}20`
-                                                        : 'var(--gray-100)',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'center',
-                                                    flexShrink: 0
-                                                }}
-                                            >
-                                                {item.aksi === 'UPDATE_STATUS' ? (
-                                                    <MapPin
-                                                        size={18}
-                                                        style={{
-                                                            color: item.details?.status_lokasi
-                                                                ? getStatusColor(item.details.status_lokasi, STATUS_LOKASI)
-                                                                : 'var(--gray-500)'
-                                                        }}
-                                                    />
-                                                ) : (
-                                                    <FileText size={18} style={{ color: 'var(--gray-500)' }} />
-                                                )}
-                                            </div>
-
-                                            <div style={{ flex: 1, minWidth: 0 }}>
-                                                <div className="font-medium">{item.no_rm}</div>
-                                                <div className="text-sm text-secondary">
-                                                    {item.aksi === 'UPDATE_STATUS' && item.details?.status_lokasi
-                                                        ? getStatusLabel(item.details.status_lokasi, STATUS_LOKASI)
-                                                        : 'Scan QR'
-                                                    }
+                                            <div className="flex items-center gap-md">
+                                                <div
+                                                    style={{ width: 40, height: 40, borderRadius: 'var(--radius-lg)', background: 'var(--primary-50)', color: 'var(--primary-600)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+                                                >
+                                                    {item.aksi === 'UPDATE_STATUS' ? <MapPin size={18} /> : <FileText size={18} />}
+                                                </div>
+                                                <div style={{ flex: 1, minWidth: 0 }}>
+                                                    <div className="font-medium text-lg">{item.no_rm}</div>
+                                                    <div className="text-sm font-semibold text-gray-800">
+                                                        {item.details?.location_name || item.details?.status_lokasi || 'Update Status'}
+                                                    </div>
+                                                </div>
+                                                <div className="text-sm text-muted">
+                                                    {formatDateTime(item.created_at).split(', ')[1]}
                                                 </div>
                                             </div>
 
-                                            <div className="text-sm text-muted" style={{ flexShrink: 0 }}>
-                                                {formatDateTime(item.created_at).split(', ')[1]}
-                                            </div>
-
-                                            <ChevronRight size={16} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
-                                        </Link>
+                                            {/* Extra Details */}
+                                            {item.details?.staff_name && (
+                                                <div className="ml-[56px] text-sm text-blue-600 flex items-center gap-xs">
+                                                    <Users size={14} />
+                                                    <span>Diambil: {item.details.staff_name}</span>
+                                                </div>
+                                            )}
+                                        </div>
                                     ))}
                                 </div>
                             </div>

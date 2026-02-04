@@ -18,6 +18,9 @@ const Users = lazy(() => import('./pages/admin/Users'))
 const ActivityLog = lazy(() => import('./pages/admin/ActivityLog'))
 const PrintQR = lazy(() => import('./pages/admin/PrintQR'))
 const AdminProfile = lazy(() => import('./pages/admin/Profile'))
+const Locations = lazy(() => import('./pages/admin/Locations'))
+const Staff = lazy(() => import('./pages/admin/Staff'))
+const Files = lazy(() => import('./pages/admin/Files'))
 
 
 
@@ -136,6 +139,9 @@ function AppRoutes() {
                     <Route path="patients/print" element={<PrintQR />} />
                     <Route path="patients/:id" element={<PatientDetail />} />
                     <Route path="users" element={<Users />} />
+                    <Route path="locations" element={<Locations />} />
+                    <Route path="staff" element={<Staff />} />
+                    <Route path="files" element={<Files />} />
                     <Route path="logs" element={<ActivityLog />} />
                     <Route path="profile" element={<AdminProfile />} />
                 </Route>

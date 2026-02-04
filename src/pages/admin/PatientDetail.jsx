@@ -1,14 +1,12 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../../config/supabase'
 import { useAuth } from '../../contexts/AuthContext'
 import { useToast } from '../../contexts/ToastContext'
-import { STATUS_LOKASI } from '../../utils/constants'
+import { useReferenceData } from '../../hooks/useReferenceData'
 import {
     formatDate,
     calculateAge,
-    getStatusLabel,
-    getStatusColor,
     formatDateTime
 } from '../../utils/helpers'
 import {
@@ -17,9 +15,8 @@ import {
     MapPin,
     User,
     Clock,
-    CheckCircle,
-    FileText,
-    History
+    History,
+    Users
 } from 'lucide-react'
 
 const PatientDetail = () => {
@@ -27,6 +24,7 @@ const PatientDetail = () => {
     const navigate = useNavigate()
     const { profile } = useAuth()
     const { success, error: showError } = useToast()
+    const { locations, staff, loading: loadingRef } = useReferenceData()
 
     const [patient, setPatient] = useState(null)
     const [history, setHistory] = useState([])
@@ -34,7 +32,8 @@ const PatientDetail = () => {
     const [saving, setSaving] = useState(false)
 
     // Update State
-    const [selectedStatus, setSelectedStatus] = useState(null)
+    const [selectedLocation, setSelectedLocation] = useState('')
+    const [selectedStaff, setSelectedStaff] = useState('')
     const [keterangan, setKeterangan] = useState('')
 
     useEffect(() => {
@@ -65,13 +64,13 @@ const PatientDetail = () => {
     }
 
     const fetchHistory = async () => {
-        // Get history with petugas info
-        // Note: Supabase join query syntax
+        // Get history with petugas (system user) and staff (picker) info
         const { data, error } = await supabase
             .from('tracer')
             .select(`
                 *,
-                profiles:petugas_id (nama)
+                profiles:petugas_id (nama),
+                staff:staff_id (nama)
             `)
             .eq('patient_id', id)
             .order('created_at', { ascending: false })
@@ -85,18 +84,33 @@ const PatientDetail = () => {
     }
 
     const handleUpdateStatus = async () => {
-        if (!selectedStatus) return
+        // Find selected location details
+        const locationDetails = locations.find(l => l.id === selectedLocation)
+        const isStorage = locationDetails?.is_storage
+
+        if (!selectedLocation) {
+            showError('Lokasi harus dipilih')
+            return
+        }
+
+        // Validation: Require staff only if NOT storage
+        if (!isStorage && !selectedStaff) {
+            showError('Petugas Pengambil Berkas harus diisi (untuk lokasi non-penyimpanan)')
+            return
+        }
+
         setSaving(true)
 
         try {
             // Insert new tracer record
-            const { data, error } = await supabase
+            const { error } = await supabase
                 .from('tracer')
                 .insert({
                     patient_id: id,
-                    status_lokasi: selectedStatus,
+                    status_lokasi: selectedLocation, // Stores Location ID (UUID)
+                    staff_id: isStorage ? null : selectedStaff,         // Null if storage
                     keterangan: keterangan || null,
-                    petugas_id: profile.id
+                    petugas_id: profile.id           // Stores System User ID
                 })
                 .select()
                 .single()
@@ -104,19 +118,29 @@ const PatientDetail = () => {
             if (error) throw error
 
             // Log activity
+            // Resolve names for log details
+            const locName = locationDetails?.name || selectedLocation
+            const staffName = isStorage
+                ? 'Dikembalikan ke Rak (System)'
+                : (staff.find(s => s.id === selectedStaff)?.nama || selectedStaff)
+
             await supabase.rpc('log_activity', {
                 p_aksi: 'UPDATE_STATUS_ADMIN',
                 p_no_rm: patient.no_rm,
                 p_details: {
-                    status_lokasi: selectedStatus,
-                    keterangan: keterangan || null
+                    status_lokasi: selectedLocation,
+                    location_name: locName,
+                    staff_name: staffName,
+                    keterangan: keterangan || null,
+                    is_storage: !!isStorage
                 }
             })
 
             success('Status lokasi berhasil diperbarui')
-            setSelectedStatus(null)
+            setSelectedLocation('')
+            setSelectedStaff('')
             setKeterangan('')
-            fetchHistory() // Refresh history
+            fetchHistory()
 
         } catch (err) {
             console.error('Error updating status:', err)
@@ -125,7 +149,19 @@ const PatientDetail = () => {
         setSaving(false)
     }
 
-    if (loading) {
+    // Helper to resolve location name from ID or use raw string (legacy)
+    const getLocationName = (status) => {
+        const loc = locations.find(l => l.id === status)
+        return loc ? loc.name : status
+    }
+
+    // Check current selected location type
+    const isSelectedStorage = useMemo(() => {
+        const loc = locations.find(l => l.id === selectedLocation)
+        return loc?.is_storage
+    }, [selectedLocation, locations])
+
+    if (loading || loadingRef) {
         return (
             <div className="page-content">
                 <div className="skeleton" style={{ height: 200, marginBottom: 20 }}></div>
@@ -145,7 +181,6 @@ const PatientDetail = () => {
         )
     }
 
-    // Current status is the first item in history
     const currentStatus = history.length > 0 ? history[0].status_lokasi : null
 
     return (
@@ -195,12 +230,9 @@ const PatientDetail = () => {
                                     <p className="text-sm font-medium text-secondary mb-xs">Lokasi Terakhir</p>
                                     {currentStatus ? (
                                         <div className="flex items-center gap-sm">
-                                            <div
-                                                className="w-3 h-3 rounded-full"
-                                                style={{ backgroundColor: getStatusColor(currentStatus, STATUS_LOKASI) }}
-                                            />
+                                            <div className="w-3 h-3 rounded-full bg-blue-500" />
                                             <span className="font-semibold text-lg">
-                                                {getStatusLabel(currentStatus, STATUS_LOKASI)}
+                                                {getLocationName(currentStatus)}
                                             </span>
                                         </div>
                                     ) : (
@@ -219,33 +251,43 @@ const PatientDetail = () => {
                                 </h3>
                             </div>
                             <div className="card-body">
-                                <div className="flex flex-col gap-sm">
-                                    {STATUS_LOKASI.map(status => (
-                                        <button
-                                            key={status.value}
-                                            className={`btn justify-between ${selectedStatus === status.value ? 'active' : ''}`}
-                                            onClick={() => setSelectedStatus(status.value)}
-                                            style={{
-                                                background: selectedStatus === status.value ? `${status.color}10` : 'white',
-                                                borderColor: selectedStatus === status.value ? status.color : 'var(--border)',
-                                                borderWidth: '1px',
-                                                borderStyle: 'solid',
-                                                color: 'var(--text-primary)'
-                                            }}
-                                        >
-                                            <div className="flex items-center gap-sm">
-                                                <div
-                                                    className="w-3 h-3 rounded-full"
-                                                    style={{ backgroundColor: status.color }}
-                                                />
-                                                {status.label}
-                                            </div>
-                                            {selectedStatus === status.value && (
-                                                <CheckCircle size={16} style={{ color: status.color }} />
-                                            )}
-                                        </button>
-                                    ))}
+                                <div className="form-group">
+                                    <label className="form-label">Lokasi Berkas</label>
+                                    <select
+                                        className="form-input form-select"
+                                        value={selectedLocation}
+                                        onChange={(e) => setSelectedLocation(e.target.value)}
+                                    >
+                                        <option value="">-- Pilih Lokasi --</option>
+                                        {locations.map(loc => (
+                                            <option key={loc.id} value={loc.id}>{loc.name}</option>
+                                        ))}
+                                    </select>
                                 </div>
+
+                                {!isSelectedStorage && (
+                                    <div className="form-group mt-md">
+                                        <label className="form-label">Petugas Pengambil Berkas</label>
+                                        <select
+                                            className="form-input form-select"
+                                            value={selectedStaff}
+                                            onChange={(e) => setSelectedStaff(e.target.value)}
+                                        >
+                                            <option value="">-- Pilih Petugas --</option>
+                                            {staff.map(s => (
+                                                <option key={s.id} value={s.id}>{s.nama} {s.nip ? `(${s.nip})` : ''}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                )}
+                                {isSelectedStorage && (
+                                    <div className="alert alert-info mt-md text-sm">
+                                        <div className="flex items-center gap-xs">
+                                            <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                                            <span>Berkas dikembalikan ke penyimpanan (Staff otomatis).</span>
+                                        </div>
+                                    </div>
+                                )}
 
                                 <div className="mt-md">
                                     <label className="form-label">Keterangan</label>
@@ -260,7 +302,7 @@ const PatientDetail = () => {
 
                                 <button
                                     className="btn btn-primary btn-block mt-md"
-                                    disabled={!selectedStatus || saving}
+                                    disabled={!selectedLocation || (!isSelectedStorage && !selectedStaff) || saving}
                                     onClick={handleUpdateStatus}
                                 >
                                     {saving ? 'Menyimpan...' : 'Simpan Perubahan'}
@@ -290,19 +332,12 @@ const PatientDetail = () => {
                                     <div className="relative pl-4 border-l-2 border-gray-100 space-y-8">
                                         {history.map((record, index) => (
                                             <div key={record.id} className="relative">
-                                                {/* Timeline Dot */}
-                                                <div
-                                                    className="absolute -left-[21px] top-1 w-3 h-3 rounded-full border-2 border-white box-content"
-                                                    style={{ backgroundColor: getStatusColor(record.status_lokasi, STATUS_LOKASI) }}
-                                                />
+                                                <div className="absolute -left-[21px] top-1 w-3 h-3 rounded-full border-2 border-white box-content bg-blue-500" />
 
                                                 <div className="flex flex-col gap-xs">
                                                     <div className="flex items-baseline justify-between">
-                                                        <span
-                                                            className="font-semibold"
-                                                            style={{ color: getStatusColor(record.status_lokasi, STATUS_LOKASI) }}
-                                                        >
-                                                            {getStatusLabel(record.status_lokasi, STATUS_LOKASI)}
+                                                        <span className="font-semibold text-blue-600">
+                                                            {getLocationName(record.status_lokasi)}
                                                         </span>
                                                         <span className="text-xs text-secondary flex items-center gap-xs">
                                                             <Clock size={12} />
@@ -310,15 +345,23 @@ const PatientDetail = () => {
                                                         </span>
                                                     </div>
 
-                                                    {record.keterangan && (
-                                                        <div className="bg-gray-50 p-sm rounded text-sm text-secondary max-w-full break-words">
-                                                            "{record.keterangan}"
-                                                        </div>
-                                                    )}
+                                                    <div className="text-sm flex flex-col gap-xs mt-xs">
+                                                        {record.staff && (
+                                                            <div className="flex items-center gap-xs text-gray-700">
+                                                                <Users size={14} />
+                                                                <span>Diambil oleh: <strong>{record.staff.nama}</strong></span>
+                                                            </div>
+                                                        )}
+                                                        {record.keterangan && (
+                                                            <div className="text-secondary italic">
+                                                                "{record.keterangan}"
+                                                            </div>
+                                                        )}
+                                                    </div>
 
                                                     <div className="text-xs text-muted flex items-center gap-xs mt-xs">
                                                         <User size={12} />
-                                                        <span>Petugas: {record.profiles?.nama || 'Unknown'}</span>
+                                                        <span>Admin Input: {record.profiles?.nama || 'Unknown'}</span>
                                                     </div>
                                                 </div>
                                             </div>

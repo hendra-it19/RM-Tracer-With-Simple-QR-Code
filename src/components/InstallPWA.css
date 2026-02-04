@@ -1,71 +1,84 @@
 .pwa-install-banner {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: var(--surface);
-  border-top: 1px solid var(--border);
-  box-shadow: var(--shadow-xl);
-  z-index: 2000; /* High z-index to be above other content */
-  animation: slideUp 0.3s ease-out;
-  padding: var(--spacing-md);
-  padding-bottom: max(var(--spacing-md), env(safe-area-inset-bottom));
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    box-shadow: var(--shadow-xl);
+    z-index: 2000; /* High z-index to be above other content */
+    animation: slideUp 0.3s ease-out;
+    padding: var(--spacing-md);
+    padding-bottom: max(var(--spacing-md), env(safe-area-inset-bottom));
+}
+
+.ios-banner {
+    background: #f8f9fa; /* Slightly custom bg for iOS distinction if needed */
+    border-top: 2px solid var(--primary);
 }
 
 .pwa-content {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--spacing-md);
-  max-width: 1280px;
-  margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-md);
+    max-width: 1280px;
+    margin: 0 auto;
 }
 
 .pwa-text {
-  flex: 1;
+    flex: 1;
 }
 
 .pwa-text strong {
-  display: block;
-  font-size: 0.9375rem;
-  color: var(--text-primary);
-  margin-bottom: 2px;
+    display: block;
+    font-size: 0.9375rem;
+    color: var(--text-primary);
+    margin-bottom: 2px;
 }
 
 .pwa-text p {
-  font-size: 0.8125rem;
-  color: var(--text-secondary);
-  line-height: 1.4;
-  margin: 0;
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+    line-height: 1.4;
+    margin: 0;
+}
+
+/* Helper for inline icons */
+.pwa-text .inline {
+    display: inline-block;
+    vertical-align: middle;
+    margin: 0 2px;
+    color: var(--primary);
 }
 
 .pwa-actions {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
 }
 
 @keyframes slideUp {
-  from {
-    transform: translateY(100%);
-  }
-  to {
-    transform: translateY(0);
-  }
+    from {
+        transform: translateY(100%);
+    }
+    to {
+        transform: translateY(0);
+    }
 }
 
 @media (max-width: 640px) {
-  .pwa-content {
-    flex-direction: column;
-    align-items: stretch;
-    text-align: center;
-  }
+    .pwa-content {
+        flex-direction: column;
+        align-items: stretch;
+        text-align: center;
+    }
 
-  .pwa-actions {
-    justify-content: stretch;
-  }
-  
-  .pwa-actions .btn {
-    flex: 1;
-  }
+    .pwa-actions {
+        justify-content: stretch;
+    }
+
+    .pwa-actions .btn {
+        flex: 1;
+    }
 }
