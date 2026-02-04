@@ -179,11 +179,12 @@ const Files = () => {
             <div className="page-content">
                 {/* Search & Stats */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-md mb-lg">
-                    <div className="card md:col-span-2 flex items-center p-sm">
-                        <Search className="text-gray-400 ml-sm" size={20} />
+                    <div className="card md:col-span-2 flex items-center p-sm" style={{ gap: '0.5rem' }}>
+                        <Search className="text-muted ml-sm" size={20} />
                         <input
                             type="text"
-                            className="form-input border-none shadow-none text-lg"
+                            className="form-input text-lg"
+                            style={{ border: 'none', boxShadow: 'none' }}
                             placeholder="Cari pasien atau No RM..."
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
@@ -198,13 +199,15 @@ const Files = () => {
                 {/* Tabs */}
                 <div className="flex border-b border-gray-200 mb-md">
                     <button
-                        className={`px-lg py-sm font-medium border-b-2 transition-colors ${activeTab === 'out' ? 'border-primary text-primary' : 'border-transparent text-secondary hover:text-gray-700'}`}
+                        className={`btn btn-ghost rounded-none border-b-2 transition-colors ${activeTab === 'out' ? 'border-primary text-primary bg-primary-50' : 'border-transparent text-secondary hover:text-gray-700 hover:bg-gray-50'}`}
+                        style={{ padding: '0.75rem 1.5rem', borderRadius: '0' }}
                         onClick={() => setActiveTab('out')}
                     >
                         Sedang Dipinjam / Keluar ({processedData.out.length})
                     </button>
                     <button
-                        className={`px-lg py-sm font-medium border-b-2 transition-colors ${activeTab === 'in' ? 'border-primary text-primary' : 'border-transparent text-secondary hover:text-gray-700'}`}
+                        className={`btn btn-ghost rounded-none border-b-2 transition-colors ${activeTab === 'in' ? 'border-primary text-primary bg-primary-50' : 'border-transparent text-secondary hover:text-gray-700 hover:bg-gray-50'}`}
+                        style={{ padding: '0.75rem 1.5rem', borderRadius: '0' }}
                         onClick={() => setActiveTab('in')}
                     >
                         Tersedia di Rak ({processedData.in.length})

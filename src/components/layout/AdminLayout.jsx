@@ -33,15 +33,36 @@ const AdminLayout = () => {
         }
     }
 
-    const navItems = [
-        { path: '/admin', icon: LayoutDashboard, label: 'Dashboard', end: true },
-        { path: '/admin/files', icon: FolderOpen, label: 'Monitoring Berkas' },
-        { path: '/admin/patients', icon: FileText, label: 'Pasien & Berkas' },
-        { path: '/admin/locations', icon: MapPin, label: 'Lokasi Berkas' },
-        { path: '/admin/staff', icon: UserCheck, label: 'Petugas Pengambil' },
-        { path: '/admin/users', icon: Users, label: 'Manajemen User' },
-        { path: '/admin/logs', icon: Activity, label: 'Log Aktivitas' },
-        { path: '/admin/profile', icon: Users, label: 'Profil Saya' }
+    // Menu Groups
+    const menuGroups = [
+        {
+            title: 'Utama',
+            items: [
+                { path: '/admin', icon: LayoutDashboard, label: 'Dashboard', end: true },
+                { path: '/admin/files', icon: FolderOpen, label: 'Monitoring Berkas' },
+                { path: '/admin/patients', icon: FileText, label: 'Pasien & Berkas' }
+            ]
+        },
+        {
+            title: 'Manajemen',
+            items: [
+                { path: '/admin/locations', icon: MapPin, label: 'Lokasi Berkas' },
+                { path: '/admin/staff', icon: UserCheck, label: 'Petugas Pengambil' },
+                { path: '/admin/users', icon: Users, label: 'Manajemen User' }
+            ]
+        },
+        {
+            title: 'Laporan',
+            items: [
+                { path: '/admin/logs', icon: Activity, label: 'Log Aktivitas' }
+            ]
+        },
+        {
+            title: 'Akun',
+            items: [
+                { path: '/admin/profile', icon: Users, label: 'Profil Saya' }
+            ]
+        }
     ]
 
     const getInitials = (name) => {
@@ -78,17 +99,24 @@ const AdminLayout = () => {
                 </div>
 
                 <nav className="sidebar-nav">
-                    {navItems.map(item => (
-                        <NavLink
-                            key={item.path}
-                            to={item.path}
-                            end={item.end}
-                            className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
-                            onClick={() => setSidebarOpen(false)}
-                        >
-                            <item.icon className="nav-item-icon" size={20} />
-                            <span>{item.label}</span>
-                        </NavLink>
+                    {menuGroups.map((group, groupIndex) => (
+                        <div key={groupIndex} className="mb-md">
+                            <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-sm px-md">
+                                {group.title}
+                            </div>
+                            {group.items.map(item => (
+                                <NavLink
+                                    key={item.path}
+                                    to={item.path}
+                                    end={item.end}
+                                    className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+                                    onClick={() => setSidebarOpen(false)}
+                                >
+                                    <item.icon className="nav-item-icon" size={20} />
+                                    <span>{item.label}</span>
+                                </NavLink>
+                            ))}
+                        </div>
                     ))}
                 </nav>
 
